@@ -152,6 +152,61 @@
   .chain-reaction-bg {
     animation: chainReactionBg 2s ease-in-out infinite;
   }
+
+  .phlogiston-trap-border {
+    animation: phlogistonTrapGlow 1.5s ease-in-out infinite;
+  }
+
+  .phlogiston-smoke-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 20%, rgba(88, 28, 135, 0.3) 50%, rgba(88, 28, 135, 0.6) 100%);
+    animation: phlogistonSmokeIn 0.5s ease-out forwards;
+  }
+
+  .phlogiston-smoke-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    font-family: 'Cinzel Decorative', serif;
+    color: #c084fc;
+    text-shadow: 0 0 20px rgba(168, 85, 247, 0.8), 0 0 40px rgba(168, 85, 247, 0.4);
+    animation: phlogistonTextPulse 1s ease-in-out infinite;
+    white-space: nowrap;
+  }
+
+  .phlogiston-glow {
+    animation: phlogistonPanelGlow 1.5s ease-in-out infinite;
+  }
+
+  .revolution-unlock-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease-out;
+    cursor: pointer;
+  }
+
+  .revolution-unlock-card {
+    background: linear-gradient(135deg, #F5E6D3 0%, #E8D4BC 50%, #D4C4A8 100%);
+    border: 4px solid #7c3aed;
+    border-radius: 1rem;
+    padding: 2rem;
+    max-width: 480px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 0 40px rgba(124, 58, 237, 0.5), 0 0 80px rgba(124, 58, 237, 0.2);
+    animation: revolutionEntrance 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    cursor: default;
+  }
 }
 
 @layer utilities {
@@ -260,4 +315,34 @@
 
 .hover\:scale-102:hover {
   transform: scale(1.02);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes phlogistonTrapGlow {
+  0%, 100% { box-shadow: 0 0 10px rgba(124, 58, 237, 0.3), 0 0 20px rgba(168, 85, 247, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(124, 58, 237, 0.6), 0 0 50px rgba(168, 85, 247, 0.4); }
+}
+
+@keyframes phlogistonSmokeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes phlogistonTextPulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.8; }
+}
+
+@keyframes phlogistonPanelGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(124, 58, 237, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(124, 58, 237, 0.8), 0 0 40px rgba(168, 85, 247, 0.3); }
+}
+
+@keyframes revolutionEntrance {
+  0% { transform: scale(0.5) translateY(30px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
 }

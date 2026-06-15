@@ -1,12 +1,13 @@
 import React from 'react';
 import type { Question } from '../../shared/types';
 import { useGameStore } from '@/store/gameStore';
-import { BookOpen, CheckCircle, XCircle, Zap } from 'lucide-react';
+import { BookOpen, CheckCircle, XCircle, Zap, Flame, ShieldAlert } from 'lucide-react';
 
 interface QuestionCardProps {
   question: Question;
   onAnswer: (index: number) => void;
   onChainReactionConfirm?: (correctIndex: number) => void;
+  onPhlogistonIdentify?: () => void;
   disabled?: boolean;
   selectedIndex?: number | null;
   correctIndex?: number;
@@ -14,12 +15,14 @@ interface QuestionCardProps {
   explanation?: string;
   isChainReactionMode?: boolean;
   isCatalystUsed?: boolean;
+  isPhlogistonTrapMode?: boolean;
 }
 
 const QuestionCard: React.FC<QuestionCardProps> = ({
   question,
   onAnswer,
   onChainReactionConfirm,
+  onPhlogistonIdentify,
   disabled = false,
   selectedIndex = null,
   correctIndex = -1,
@@ -27,8 +30,9 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
   explanation = '',
   isChainReactionMode = false,
   isCatalystUsed = false,
+  isPhlogistonTrapMode = false,
 }) => {
-  const { gameStatus } = useGameStore();
+  const { gameStatus, isPhlogistonTrap, phlogistonTrapExplanation } = useGameStore();
 
   const getOptionStyle = (index: number) => {
     if (gameStatus !== 'answered' && gameStatus !== 'chainReaction') {
@@ -110,11 +114,23 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
   return (
     <div className="w-full max-w-2xl mx-auto fade-in-up">
       <div className={`parchment-bg rounded-lg p-6 md:p-8 shadow-2xl border-4 noise-overlay ${
-        isCatalystUsed ? 'border-yellow-400 catalyst-active-border' : 'border-alchemy-copperDark'
+        isPhlogistonTrapMode
+          ? 'border-purple-500 phlogiston-trap-border'
+          : isCatalystUsed
+            ? 'border-yellow-400 catalyst-active-border'
+            : 'border-alchemy-copperDark'
       }`}>
         <div className="flex items-start gap-3 mb-6">
-          <div className={`p-2 rounded-lg ${isCatalystUsed ? 'bg-yellow-400/30' : 'bg-alchemy-copper/20'}`}>
-            {isCatalystUsed ? (
+          <div className={`p-2 rounded-lg ${
+            isPhlogistonTrapMode
+              ? 'bg-purple-500/20'
+              : isCatalystUsed
+                ? 'bg-yellow-400/30'
+                : 'bg-alchemy-copper/20'
+          }`}>
+            {isPhlogistonTrapMode ? (
+              <Flame className="w-6 h-6 text-purple-600 animate-pulse" />
+            ) : isCatalystUsed ? (
               <Zap className="w-6 h-6 text-yellow-500 animate-pulse" />
             ) : (
               <BookOpen className="w-6 h-6 text-alchemy-copper" />
@@ -122,10 +138,14 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
           </div>
           <div>
             <h3 className="text-lg font-display text-alchemy-brown mb-1">
-              {isCatalystUsed ? '⚛️ 催化剂自动应答' : '配方配平挑战'}
+              {isPhlogistonTrapMode ? '🔥 燃素说陷阱！' : isCatalystUsed ? '⚛️ 催化剂自动应答' : '配方配平挑战'}
             </h3>
             <p className="text-sm text-alchemy-brown/70">
-              {isCatalystUsed ? '催化剂量子已消耗，自动选择正确答案' : '选择正确的答案来维持反应炉的温度'}
+              {isPhlogistonTrapMode
+                ? '这道题暗藏燃素谬误——仔细辨别，戳破历史谎言！'
+                : isCatalystUsed
+                  ? '催化剂量子已消耗，自动选择正确答案'
+                  : '选择正确的答案来维持反应炉的温度'}
             </p>
           </div>
         </div>
@@ -153,7 +173,24 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
           ))}
         </div>
 
-        {showExplanation && explanation && (
+        {isPhlogistonTrapMode && gameStatus !== 'answered' && (
+          <div className="mt-4">
+            <button
+              onClick={() => onPhlogistonIdentify?.()}
+              disabled={disabled}
+              className={`w-full py-3 px-6 rounded-lg font-display text-lg flex items-center justify-center gap-2 transition-all duration-300 ${
+                disabled
+                  ? 'bg-purple-500/20 text-purple-500/40 cursor-not-allowed border border-purple-500/20'
+                  : 'bg-gradient-to-r from-purple-600 to-purple-800 text-white hover:from-purple-500 hover:to-purple-700 hover:scale-105 shadow-lg shadow-purple-500/30'
+              }`}
+            >
+              <ShieldAlert className="w-5 h-5" />
+              这是燃素谬误！
+            </button>
+          </div>
+        )}
+
+        {showExplanation && explanation && !isPhlogistonTrap && (
           <div className="mt-6 p-4 bg-alchemy-copper/20 rounded-lg border border-alchemy-copper/50 fade-in-up stagger-2">
             <h4 className="font-display text-alchemy-brown mb-2 flex items-center gap-2">
               <span>📜</span> 历史解析
@@ -162,7 +199,16 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
           </div>
         )}
 
-        {showExplanation && question.historicalContext && (
+        {showExplanation && isPhlogistonTrap && phlogistonTrapExplanation && (
+          <div className="mt-6 p-4 bg-purple-500/20 rounded-lg border border-purple-500/50 fade-in-up stagger-2">
+            <h4 className="font-display text-purple-700 mb-2 flex items-center gap-2">
+              <span>🔥</span> 燃素谬误揭露
+            </h4>
+            <p className="text-alchemy-darkBrown/80 leading-relaxed">{phlogistonTrapExplanation}</p>
+          </div>
+        )}
+
+        {showExplanation && question.historicalContext && !isPhlogistonTrap && (
           <div className="mt-4 p-4 bg-alchemy-flame/10 rounded-lg border border-alchemy-flame/30 fade-in-up stagger-3">
             <h4 className="font-display text-alchemy-flame mb-2 flex items-center gap-2">
               <span>🏛️</span> 历史背景

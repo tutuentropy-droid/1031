@@ -41,7 +41,15 @@ export interface SubmitAnswerResponse {
   nextQuestion?: Question;
 }
 
-export type GameStatus = 'idle' | 'playing' | 'answered' | 'unlock' | 'gameover' | 'chainReaction';
+export interface HistoricalRevolution {
+  id: string;
+  title: string;
+  content: string;
+  year: number;
+  icon: string;
+}
+
+export type GameStatus = 'idle' | 'playing' | 'answered' | 'unlock' | 'gameover' | 'chainReaction' | 'phlogistonTrap' | 'revolutionUnlock';
 
 export interface Element {
   id: string;

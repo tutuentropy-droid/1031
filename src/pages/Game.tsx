@@ -5,8 +5,16 @@ import { api } from '@/utils/api';
 import AlchemyFurnace from '@/components/AlchemyFurnace';
 import QuestionCard from '@/components/QuestionCard';
 import CatalystPanel from '@/components/CatalystPanel';
-import type { SubmitAnswerResponse } from '../../shared/types';
-import { Home, RotateCcw, Trophy, HelpCircle } from 'lucide-react';
+import PhlogistonTrapPanel from '@/components/PhlogistonTrapPanel';
+import {
+  shouldActivatePhlogistonTrap,
+  getRandomPhlogistonDescription,
+  getPhlogistonExplanation,
+  getPhlogistonDescriptionIndex,
+  getRevolutionForMilestone,
+} from '@/components/PhlogistonTrapPanel';
+import type { SubmitAnswerResponse, Question } from '../../shared/types';
+import { Home, RotateCcw, Trophy, HelpCircle, Shield } from 'lucide-react';
 
 const Game: React.FC = () => {
   const navigate = useNavigate();
@@ -26,6 +34,12 @@ const Game: React.FC = () => {
     isChainReaction,
     isCatalystActive,
     showLavoisierSpeech,
+    isPhlogistonTrap,
+    phlogistonIdentified,
+    labCoatShields,
+    isPhlogistonSmoke,
+    unlockedRevolutions,
+    currentRevolution,
     setCurrentQuestion,
     setTemperature,
     setGameStatus,
@@ -41,10 +55,19 @@ const Game: React.FC = () => {
     setIsChainReaction,
     setIsCatalystActive,
     setShowLavoisierSpeech,
+    setIsPhlogistonTrap,
+    incrementPhlogistonIdentified,
+    unlockRevolution,
+    setCurrentRevolution,
+    useLabCoatShield,
+    setIsPhlogistonSmoke,
+    setPhlogistonTrapExplanation,
+    resetPhlogistonTrap,
   } = useGameStore();
 
   const [loading, setLoading] = useState(true);
   const [shakeScreen, setShakeScreen] = useState(false);
+  const [phlogistonTrapDesc, setPhlogistonTrapDesc] = useState<string | null>(null);
   const lavoisierTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const triggerLavoisierSpeech = useCallback(() => {
@@ -53,20 +76,38 @@ const Game: React.FC = () => {
     lavoisierTimerRef.current = setTimeout(() => setShowLavoisierSpeech(false), 2500);
   }, [setShowLavoisierSpeech]);
 
+  const maybeApplyPhlogistonTrap = useCallback((question: Question): Question => {
+    resetPhlogistonTrap();
+    setPhlogistonTrapDesc(null);
+    if (shouldActivatePhlogistonTrap()) {
+      const trapDesc = getRandomPhlogistonDescription();
+      setPhlogistonTrapDesc(trapDesc);
+      setIsPhlogistonTrap(true);
+      const trapQuestion: Question = {
+        ...question,
+        description: `⚠️ ${trapDesc}`,
+        explanation: getPhlogistonExplanation(getPhlogistonDescriptionIndex(trapDesc)),
+      };
+      return trapQuestion;
+    }
+    return question;
+  }, [resetPhlogistonTrap, setIsPhlogistonTrap]);
+
   const loadFirstQuestion = useCallback(async () => {
     if (!selectedChemist) return;
     
     try {
       setLoading(true);
       const question = await api.getQuestion(selectedChemist.id);
-      setCurrentQuestion(question);
+      const processedQuestion = maybeApplyPhlogistonTrap(question);
+      setCurrentQuestion(processedQuestion);
       setGameStatus('playing');
     } catch (error) {
       console.error('Failed to load question:', error);
     } finally {
       setLoading(false);
     }
-  }, [selectedChemist, setCurrentQuestion, setGameStatus]);
+  }, [selectedChemist, setCurrentQuestion, setGameStatus, maybeApplyPhlogistonTrap]);
 
   useEffect(() => {
     if (!selectedChemist) {
@@ -85,6 +126,30 @@ const Game: React.FC = () => {
 
   const handleAnswer = useCallback(async (index: number) => {
     if (!currentQuestion || (gameStatus !== 'playing' && gameStatus !== 'chainReaction')) return;
+
+    if (isPhlogistonTrap) {
+      setSelectedAnswer(index);
+      setGameStatus('answered');
+      incrementScore(-50);
+      incrementQuestionsAnswered(false);
+      resetConsecutiveCorrect();
+
+      if (labCoatShields > 0) {
+        useLabCoatShield();
+        setPhlogistonTrapExplanation('🛡️ 实验服护盾抵挡了燃素烟雾！但这道题确实是燃素谬误，你选错了答案。');
+      } else {
+        setIsPhlogistonSmoke(true);
+        setShakeScreen(true);
+        setTimeout(() => setShakeScreen(false), 500);
+        setTimeout(() => setIsPhlogistonSmoke(false), 3000);
+        setPhlogistonTrapExplanation('🔥 燃素烟雾笼罩了你的视野！你误选了答案——这道题是燃素谬误，应该点击"这是燃素谬误"！');
+      }
+
+      setTimeout(() => {
+        loadNextQuestion();
+      }, 4000);
+      return;
+    }
 
     const usingCatalyst = isCatalystActive;
 
@@ -210,7 +275,8 @@ const Game: React.FC = () => {
         nextQuestion = await api.getQuestion(selectedChemist.id);
       }
       if (nextQuestion) {
-        setCurrentQuestion(nextQuestion);
+        const processedQuestion = maybeApplyPhlogistonTrap(nextQuestion);
+        setCurrentQuestion(processedQuestion);
         setSelectedAnswer(null);
         setLastAnswerResult(null);
         setGameStatus(isChainReaction ? 'chainReaction' : 'playing');
@@ -218,7 +284,36 @@ const Game: React.FC = () => {
     } catch (error) {
       console.error('Failed to load next question:', error);
     }
-  }, [selectedChemist, isChainReaction, setCurrentQuestion, setSelectedAnswer, setLastAnswerResult, setGameStatus]);
+  }, [selectedChemist, isChainReaction, setCurrentQuestion, setSelectedAnswer, setLastAnswerResult, setGameStatus, maybeApplyPhlogistonTrap]);
+
+  const handlePhlogistonIdentify = useCallback(() => {
+    if (!isPhlogistonTrap || gameStatus !== 'playing') return;
+
+    setGameStatus('answered');
+    incrementScore(150);
+    incrementQuestionsAnswered(true);
+    incrementConsecutiveCorrect();
+    incrementPhlogistonIdentified();
+
+    const descIndex = phlogistonTrapDesc ? getPhlogistonDescriptionIndex(phlogistonTrapDesc) : 0;
+    setPhlogistonTrapExplanation(getPhlogistonExplanation(descIndex));
+
+    const newIdentified = phlogistonIdentified + 1;
+    if (newIdentified % 3 === 0) {
+      const revolution = getRevolutionForMilestone(newIdentified);
+      if (revolution) {
+        unlockRevolution(revolution);
+      }
+    }
+
+    if (consecutiveCorrect + 1 >= 3) {
+      triggerLavoisierSpeech();
+    }
+
+    setTimeout(() => {
+      loadNextQuestion();
+    }, 4000);
+  }, [isPhlogistonTrap, gameStatus, phlogistonTrapDesc, phlogistonIdentified, consecutiveCorrect, setGameStatus, incrementScore, incrementQuestionsAnswered, incrementConsecutiveCorrect, incrementPhlogistonIdentified, setPhlogistonTrapExplanation, unlockRevolution, triggerLavoisierSpeech, loadNextQuestion]);
 
   const handleRestart = () => {
     resetGame();
@@ -231,7 +326,8 @@ const Game: React.FC = () => {
     try {
       setLoading(true);
       const question = await api.getQuestion(selectedChemist.id);
-      setCurrentQuestion(question);
+      const processedQuestion = maybeApplyPhlogistonTrap(question);
+      setCurrentQuestion(processedQuestion);
       setTemperature(50);
       setSelectedAnswer(null);
       setLastAnswerResult(null);
@@ -259,7 +355,33 @@ const Game: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-b from-alchemy-darkBrown via-alchemy-brown to-alchemy-darkBrown py-6 px-4 noise-overlay ${shakeScreen ? 'animate-shake' : ''} ${isChainReaction ? 'chain-reaction-bg' : ''}`}>
+    <div className={`min-h-screen bg-gradient-to-b from-alchemy-darkBrown via-alchemy-brown to-alchemy-darkBrown py-6 px-4 noise-overlay relative ${shakeScreen ? 'animate-shake' : ''} ${isChainReaction ? 'chain-reaction-bg' : ''}`}>
+      {isPhlogistonSmoke && (
+        <div className="phlogiston-smoke-overlay">
+          <div className="phlogiston-smoke-text">
+            🔥 燃素烟雾笼罩！ 🔥
+          </div>
+        </div>
+      )}
+
+      {currentRevolution && gameStatus === 'answered' && (
+        <div className="revolution-unlock-overlay" onClick={() => setCurrentRevolution(null)}>
+          <div className="revolution-unlock-card" onClick={(e) => e.stopPropagation()}>
+            <div className="text-6xl mb-4 animate-bounce">{currentRevolution.icon}</div>
+            <h3 className="text-2xl font-display text-purple-700 mb-2">🏛️ 历史革命解锁！</h3>
+            <h4 className="text-xl font-display text-alchemy-darkBrown mb-2">{currentRevolution.title}</h4>
+            <p className="text-sm text-alchemy-brown mb-1">{currentRevolution.year}年</p>
+            <p className="text-alchemy-darkBrown/80 leading-relaxed mt-3 text-sm">{currentRevolution.content}</p>
+            <button
+              onClick={() => setCurrentRevolution(null)}
+              className="mt-4 px-6 py-2 brass-button rounded-lg text-alchemy-darkBrown font-display"
+            >
+              继续炼金
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <button
@@ -296,6 +418,12 @@ const Game: React.FC = () => {
                 <span className="text-alchemy-emerald font-bold">{unlockedFacts.length}</span>
               </div>
             )}
+            {labCoatShields > 0 && (
+              <div className="flex items-center gap-1 px-3 py-1 bg-blue-400/20 rounded-full border border-blue-400/50">
+                <Shield className="w-4 h-4 text-blue-400" />
+                <span className="text-blue-400 font-bold">{labCoatShields}</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -304,6 +432,9 @@ const Game: React.FC = () => {
             <AlchemyFurnace />
             <div className="mt-6">
               <CatalystPanel />
+            </div>
+            <div className="mt-4">
+              <PhlogistonTrapPanel />
             </div>
             <div className="mt-4 flex justify-center gap-4">
               <button
@@ -322,6 +453,7 @@ const Game: React.FC = () => {
                 question={currentQuestion}
                 onAnswer={handleAnswer}
                 onChainReactionConfirm={handleChainReactionConfirm}
+                onPhlogistonIdentify={handlePhlogistonIdentify}
                 disabled={gameStatus !== 'playing' && gameStatus !== 'chainReaction'}
                 selectedIndex={selectedAnswer}
                 correctIndex={lastAnswerResult?.correctIndex}
@@ -329,6 +461,7 @@ const Game: React.FC = () => {
                 explanation={lastAnswerResult?.explanation}
                 isChainReactionMode={gameStatus === 'chainReaction'}
                 isCatalystUsed={isCatalystActive && gameStatus === 'answered'}
+                isPhlogistonTrapMode={isPhlogistonTrap}
               />
             )}
 
@@ -380,10 +513,18 @@ const Game: React.FC = () => {
               </div>
             )}
 
-            {gameStatus === 'answered' && lastAnswerResult && !lastAnswerResult.shouldUnlock && (
+            {gameStatus === 'answered' && lastAnswerResult && !lastAnswerResult.shouldUnlock && !isPhlogistonTrap && (
               <div className="mt-4 text-center fade-in-up stagger-2">
                 <p className="text-alchemy-copperLight text-sm">
                   3秒后自动进入下一题...
+                </p>
+              </div>
+            )}
+
+            {gameStatus === 'answered' && isPhlogistonTrap && (
+              <div className="mt-4 text-center fade-in-up stagger-2">
+                <p className="text-purple-600 text-sm">
+                  4秒后自动进入下一题...
                 </p>
               </div>
             )}
@@ -408,6 +549,9 @@ const Game: React.FC = () => {
               <p className="mt-1 font-semibold text-alchemy-flame">⚗️ 催化剂连击系统：</p>
               <p>每 2 次正确 → 积累 1 催化剂量子 | 消耗量子 → 自动正确(不加分，仅保温度)</p>
               <p>连续 3 次正确不消耗 → <span className="text-alchemy-flame font-bold">链式反应</span> → 下一题双倍得分！⚛️</p>
+              <p className="mt-1 font-semibold text-purple-600">🔥 燃素说陷阱模式：</p>
+              <p>随机出现燃素谬误题 → 点击<span className="text-purple-600 font-bold">"这是燃素谬误"</span> +150分</p>
+              <p>误选答案 → -50分 + 燃素烟雾3秒 | 每识破3次 → 解锁历史革命 + 🛡️实验服护盾</p>
             </div>
           </div>
         </div>

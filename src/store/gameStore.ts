@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Chemist, Question, FunFact, GameStatus, SubmitAnswerResponse, Element, CellOwner, ElementFact, SubmitPeriodicAnswerResponse } from '../../shared/types';
+import type { Chemist, Question, FunFact, GameStatus, SubmitAnswerResponse, Element, CellOwner, ElementFact, SubmitPeriodicAnswerResponse, HistoricalRevolution } from '../../shared/types';
 
 interface GameState {
   selectedChemist: Chemist | null;
@@ -19,6 +19,14 @@ interface GameState {
   isChainReaction: boolean;
   isCatalystActive: boolean;
   showLavoisierSpeech: boolean;
+
+  isPhlogistonTrap: boolean;
+  phlogistonIdentified: number;
+  unlockedRevolutions: HistoricalRevolution[];
+  currentRevolution: HistoricalRevolution | null;
+  labCoatShields: number;
+  isPhlogistonSmoke: boolean;
+  phlogistonTrapExplanation: string;
 
   periodicBoard: Record<string, CellOwner>;
   periodicPlayerCells: string[];
@@ -57,6 +65,16 @@ interface GameState {
   setIsChainReaction: (val: boolean) => void;
   setIsCatalystActive: (val: boolean) => void;
   setShowLavoisierSpeech: (val: boolean) => void;
+
+  setIsPhlogistonTrap: (val: boolean) => void;
+  incrementPhlogistonIdentified: () => void;
+  unlockRevolution: (revolution: HistoricalRevolution) => void;
+  setCurrentRevolution: (revolution: HistoricalRevolution | null) => void;
+  addLabCoatShield: () => void;
+  useLabCoatShield: () => void;
+  setIsPhlogistonSmoke: (val: boolean) => void;
+  setPhlogistonTrapExplanation: (explanation: string) => void;
+  resetPhlogistonTrap: () => void;
 
   initPeriodicGame: () => void;
   setPeriodicBoard: (board: Record<string, CellOwner>) => void;
@@ -97,6 +115,14 @@ export const useGameStore = create<GameState>((set) => ({
   isCatalystActive: false,
   showLavoisierSpeech: false,
 
+  isPhlogistonTrap: false,
+  phlogistonIdentified: 0,
+  unlockedRevolutions: [],
+  currentRevolution: null,
+  labCoatShields: 0,
+  isPhlogistonSmoke: false,
+  phlogistonTrapExplanation: '',
+
   selectChemist: (chemist) => set({ selectedChemist: chemist }),
   setCurrentQuestion: (question) => set({ currentQuestion: question }),
   setTemperature: (temp) => set({ temperature: temp }),
@@ -133,6 +159,32 @@ export const useGameStore = create<GameState>((set) => ({
   setIsChainReaction: (val) => set({ isChainReaction: val }),
   setIsCatalystActive: (val) => set({ isCatalystActive: val }),
   setShowLavoisierSpeech: (val) => set({ showLavoisierSpeech: val }),
+
+  setIsPhlogistonTrap: (val) => set({ isPhlogistonTrap: val }),
+  incrementPhlogistonIdentified: () => set((state) => {
+    const newCount = state.phlogistonIdentified + 1;
+    const shouldAddShield = newCount % 3 === 0;
+    return {
+      phlogistonIdentified: newCount,
+      ...(shouldAddShield ? { labCoatShields: state.labCoatShields + 1 } : {}),
+    };
+  }),
+  unlockRevolution: (revolution) => set((state) => ({
+    unlockedRevolutions: [...state.unlockedRevolutions, revolution],
+    currentRevolution: revolution,
+  })),
+  setCurrentRevolution: (revolution) => set({ currentRevolution: revolution }),
+  addLabCoatShield: () => set((state) => ({ labCoatShields: state.labCoatShields + 1 })),
+  useLabCoatShield: () => set((state) => ({
+    labCoatShields: Math.max(0, state.labCoatShields - 1),
+  })),
+  setIsPhlogistonSmoke: (val) => set({ isPhlogistonSmoke: val }),
+  setPhlogistonTrapExplanation: (explanation) => set({ phlogistonTrapExplanation: explanation }),
+  resetPhlogistonTrap: () => set({
+    isPhlogistonTrap: false,
+    isPhlogistonSmoke: false,
+    phlogistonTrapExplanation: '',
+  }),
   resetGame: () => set({
     selectedChemist: null,
     currentQuestion: null,
@@ -150,6 +202,13 @@ export const useGameStore = create<GameState>((set) => ({
     isChainReaction: false,
     isCatalystActive: false,
     showLavoisierSpeech: false,
+    isPhlogistonTrap: false,
+    phlogistonIdentified: 0,
+    unlockedRevolutions: [],
+    currentRevolution: null,
+    labCoatShields: 0,
+    isPhlogistonSmoke: false,
+    phlogistonTrapExplanation: '',
   }),
 
   periodicBoard: {},
