@@ -65,4 +65,9 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+
+  resetPeriodicGame: (): Promise<{ success: boolean }> =>
+    fetchJson<{ success: boolean }>('/periodic-game/reset', {
+      method: 'POST',
+    }),
 };

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { processPeriodicAnswer } from '../services/periodicGameService';
+import { processPeriodicAnswer, resetPeriodicGame } from '../services/periodicGameService';
 import type { SubmitPeriodicAnswerRequest } from '../../shared/types';
 
 const router = Router();
@@ -14,6 +14,11 @@ router.post('/submit-answer', (req, res) => {
 
   const result = processPeriodicAnswer(questionId, selectedIndex, elementId);
   res.json(result);
+});
+
+router.post('/reset', (_req, res) => {
+  resetPeriodicGame();
+  res.json({ success: true });
 });
 
 export default router;

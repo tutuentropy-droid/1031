@@ -84,6 +84,8 @@ interface GameState {
   incrementPeriodicProphecyCount: () => void;
   decrementPeriodicProphecyCount: () => void;
   setPeriodicAiThinking: (thinking: boolean) => void;
+  setPeriodicLastCapturedElement: (element: Element | null) => void;
+  setPeriodicLastLostElement: (element: Element | null) => void;
   setPeriodicAnswerResult: (result: SubmitPeriodicAnswerResponse | null) => void;
   addPeriodicCompletedLine: (line: { type: 'row' | 'col'; index: number; owner: CellOwner }) => void;
   setPeriodicGameWinner: (winner: CellOwner) => void;
@@ -261,6 +263,8 @@ export const useGameStore = create<GameState>((set) => ({
   incrementPeriodicProphecyCount: () => set((state) => ({ periodicProphecyCount: state.periodicProphecyCount + 1 })),
   decrementPeriodicProphecyCount: () => set((state) => ({ periodicProphecyCount: Math.max(0, state.periodicProphecyCount - 1) })),
   setPeriodicAiThinking: (thinking) => set({ periodicAiThinking: thinking }),
+  setPeriodicLastCapturedElement: (element) => set({ periodicLastCapturedElement: element }),
+  setPeriodicLastLostElement: (element) => set({ periodicLastLostElement: element }),
   setPeriodicAnswerResult: (result) => set({ periodicAnswerResult: result }),
   addPeriodicCompletedLine: (line) => set((state) => ({
     periodicCompletedLines: [...state.periodicCompletedLines, line],

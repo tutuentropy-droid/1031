@@ -48,6 +48,8 @@ const PeriodicTableGame: React.FC = () => {
     setSelectedAnswer,
     setGameStatus,
     setLastAnswerResult,
+    setPeriodicLastCapturedElement,
+    setPeriodicLastLostElement,
     gameStatus,
     currentQuestion,
     selectedAnswer,
@@ -69,6 +71,7 @@ const PeriodicTableGame: React.FC = () => {
       const [elementsData, chemistsData] = await Promise.all([
         api.getElements(),
         api.getChemists(),
+        api.resetPeriodicGame(),
       ]);
       setElements(elementsData);
       setChemists(chemistsData);
@@ -153,6 +156,12 @@ const PeriodicTableGame: React.FC = () => {
         elementId: periodicSelectedElementId,
       });
 
+      if (!result.isCorrect) {
+        setPeriodicAiThinking(true);
+        await new Promise(resolve => setTimeout(resolve, 1200));
+        setPeriodicAiThinking(false);
+      }
+
       setPeriodicAnswerResult(result);
       setPeriodicBoard(result.newBoardState);
 
@@ -161,6 +170,8 @@ const PeriodicTableGame: React.FC = () => {
         setShakeScreen(false);
         
         if (result.capturedElement) {
+          setPeriodicLastCapturedElement(result.capturedElement);
+          setPeriodicLastLostElement(null);
           showElementFact(result.capturedElement);
         }
 
@@ -171,6 +182,11 @@ const PeriodicTableGame: React.FC = () => {
       } else {
         setShakeScreen(true);
         setTimeout(() => setShakeScreen(false), 500);
+
+        if (result.lostElement) {
+          setPeriodicLastLostElement(result.lostElement);
+          setPeriodicLastCapturedElement(null);
+        }
 
         if (result.lineCompleted && result.lineCompleted.owner === 'ai') {
           addPeriodicCompletedLine(result.lineCompleted);
@@ -193,8 +209,9 @@ const PeriodicTableGame: React.FC = () => {
 
     } catch (error) {
       console.error('Failed to submit answer:', error);
+      setPeriodicAiThinking(false);
     }
-  }, [currentQuestion, gameStatus, periodicSelectedElementId, elements, setSelectedAnswer, setGameStatus, setPeriodicAnswerResult, setPeriodicBoard, incrementPeriodicScore, showElementFact, addPeriodicCompletedLine, incrementPeriodicProphecyCount, setPeriodicGameOver, setPeriodicGameWinner, setPeriodicSelectedElement, setLastAnswerResult]);
+  }, [currentQuestion, gameStatus, periodicSelectedElementId, elements, setSelectedAnswer, setGameStatus, setPeriodicAnswerResult, setPeriodicBoard, setPeriodicAiThinking, incrementPeriodicScore, showElementFact, addPeriodicCompletedLine, incrementPeriodicProphecyCount, setPeriodicLastCapturedElement, setPeriodicLastLostElement, setPeriodicGameOver, setPeriodicGameWinner, setPeriodicSelectedElement, setLastAnswerResult]);
 
   const handleSelectProphecy = useCallback((chemistId: ProphecyType) => {
     setPeriodicCurrentProphecy(chemistId === 'random' ? 'random' : chemistId);
@@ -217,12 +234,22 @@ const PeriodicTableGame: React.FC = () => {
     setPeriodicCurrentElementFact(null);
   }, [setPeriodicShowElementFact, setPeriodicCurrentElementFact]);
 
-  const handleRestart = () => {
+  const handleRestart = async () => {
+    try {
+      await api.resetPeriodicGame();
+    } catch (error) {
+      console.error('Failed to reset periodic game:', error);
+    }
     resetPeriodicGame();
     navigate('/');
   };
 
-  const handleRetry = () => {
+  const handleRetry = async () => {
+    try {
+      await api.resetPeriodicGame();
+    } catch (error) {
+      console.error('Failed to reset periodic game:', error);
+    }
     resetPeriodicGame();
     loadInitialData();
   };
