@@ -38,7 +38,7 @@ export function processPeriodicAnswer(
       capturedElement = element;
 
       lineCompleted = checkLineCompletion(currentBoard, elements);
-      if (lineCompleted) {
+      if (lineCompleted && !isLineAlreadyCompleted(lineCompleted)) {
         completedLines.push(lineCompleted);
       }
     }
@@ -54,7 +54,7 @@ export function processPeriodicAnswer(
         lostElement = aiElement;
 
         lineCompleted = checkLineCompletion(currentBoard, elements);
-        if (lineCompleted) {
+        if (lineCompleted && !isLineAlreadyCompleted(lineCompleted)) {
           completedLines.push(lineCompleted);
         }
       }
@@ -64,27 +64,17 @@ export function processPeriodicAnswer(
   const allCellsOccupied = getUnoccupiedCells(currentBoard).length === 0;
   const playerCells = Object.values(currentBoard).filter(v => v === 'player').length;
   const aiCells = Object.values(currentBoard).filter(v => v === 'ai').length;
-  
+
   let gameOver = false;
   let winner: CellOwner = null;
 
-  if (allCellsOccupied || completedLines.some(l => l.owner !== null)) {
-    if (completedLines.length > 0) {
-      const playerLines = completedLines.filter(l => l.owner === 'player').length;
-      const aiLines = completedLines.filter(l => l.owner === 'ai').length;
-      if (playerLines > 0 && aiLines === 0) {
-        gameOver = true;
-        winner = 'player';
-      } else if (aiLines > 0 && playerLines === 0) {
-        gameOver = true;
-        winner = 'ai';
-      }
-    }
-    
-    if (!gameOver && allCellsOccupied) {
-      gameOver = true;
-      winner = playerCells > aiCells ? 'player' : (aiCells > playerCells ? 'ai' : null);
-    }
+  // 仅根据本回合完成的行列或棋盘占满来判定胜负，避免历史 completedLines 导致重启后误判
+  if (lineCompleted) {
+    gameOver = true;
+    winner = lineCompleted.owner;
+  } else if (allCellsOccupied) {
+    gameOver = true;
+    winner = playerCells > aiCells ? 'player' : (aiCells > playerCells ? 'ai' : null);
   }
 
   const nextQuestion = getRandomQuestion('mendeleev') || undefined;
@@ -101,6 +91,14 @@ export function processPeriodicAnswer(
     winner,
     nextQuestion,
   };
+}
+
+function isLineAlreadyCompleted(
+  line: { type: 'row' | 'col'; index: number; owner: CellOwner }
+): boolean {
+  return completedLines.some(
+    (l) => l.type === line.type && l.index === line.index && l.owner === line.owner
+  );
 }
 
 export function resetPeriodicGame(): void {

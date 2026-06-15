@@ -234,24 +234,40 @@ const PeriodicTableGame: React.FC = () => {
     setPeriodicCurrentElementFact(null);
   }, [setPeriodicShowElementFact, setPeriodicCurrentElementFact]);
 
+  const clearQuestionState = useCallback(() => {
+    setCurrentQuestion(null);
+    setSelectedAnswer(null);
+    setLastAnswerResult(null);
+    setGameStatus('idle');
+  }, [setCurrentQuestion, setSelectedAnswer, setLastAnswerResult, setGameStatus]);
+
+  const resetAndReload = useCallback(async () => {
+    await api.resetPeriodicGame();
+    resetPeriodicGame();
+    clearQuestionState();
+    await loadInitialData();
+  }, [resetPeriodicGame, clearQuestionState, loadInitialData]);
+
   const handleRestart = async () => {
     try {
       await api.resetPeriodicGame();
+      resetPeriodicGame();
+      clearQuestionState();
+      navigate('/');
     } catch (error) {
       console.error('Failed to reset periodic game:', error);
     }
-    resetPeriodicGame();
-    navigate('/');
   };
 
   const handleRetry = async () => {
     try {
-      await api.resetPeriodicGame();
+      setLoading(true);
+      await resetAndReload();
     } catch (error) {
       console.error('Failed to reset periodic game:', error);
+    } finally {
+      setLoading(false);
     }
-    resetPeriodicGame();
-    loadInitialData();
   };
 
   const playerCells = Object.values(periodicBoard).filter(v => v === 'player').length;

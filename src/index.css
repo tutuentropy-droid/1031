@@ -346,3 +346,259 @@
   0% { transform: scale(0.5) translateY(30px); opacity: 0; }
   100% { transform: scale(1) translateY(0); opacity: 1; }
 }
+
+/* ========== 反应动力学 - 爆炸危险模式 ========== */
+.explosion-danger-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center,
+    rgba(220, 38, 38, 0.15) 0%,
+    rgba(255, 107, 53, 0.25) 30%,
+    rgba(220, 38, 38, 0.4) 60%,
+    rgba(127, 29, 29, 0.6) 100%);
+  animation: explosionFadeIn 0.25s ease-out, explosionFadeOut 0.4s ease-in 1.4s forwards;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.explosion-danger-content {
+  text-align: center;
+  animation: explosionShake 0.15s ease-in-out infinite, explosionScaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.explosion-danger-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 2.5rem;
+  color: #fca5a5;
+  text-shadow:
+    0 0 10px rgba(220, 38, 38, 0.8),
+    0 0 20px rgba(220, 38, 38, 0.6),
+    0 0 40px rgba(255, 107, 53, 0.4);
+  letter-spacing: 0.1em;
+}
+
+.explosion-danger-subtitle {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.1rem;
+  color: #fecaca;
+  margin-top: 0.5rem;
+  text-shadow: 0 0 10px rgba(220, 38, 38, 0.6);
+}
+
+@keyframes explosionFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes explosionFadeOut {
+  to { opacity: 0; }
+}
+
+@keyframes explosionShake {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-2px, 1px); }
+  50% { transform: translate(2px, -1px); }
+  75% { transform: translate(-1px, 2px); }
+}
+
+@keyframes explosionScaleIn {
+  from { transform: scale(0.3); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes explosion-pulse {
+  0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 20px rgba(220, 38, 38, 0.8)); }
+  50% { transform: scale(1.15) rotate(5deg); filter: drop-shadow(0 0 40px rgba(255, 107, 53, 1)); }
+}
+
+.animate-explosion-pulse {
+  animation: explosion-pulse 0.4s ease-in-out infinite;
+}
+
+.explosion-danger-border {
+  animation: explosionBorderGlow 0.3s ease-in-out infinite;
+  box-shadow:
+    0 0 15px rgba(220, 38, 38, 0.5),
+    0 0 30px rgba(220, 38, 38, 0.3),
+    inset 0 0 15px rgba(255, 107, 53, 0.1);
+}
+
+@keyframes explosionBorderGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 15px rgba(220, 38, 38, 0.5),
+      0 0 30px rgba(220, 38, 38, 0.3),
+      inset 0 0 15px rgba(255, 107, 53, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 25px rgba(255, 107, 53, 0.7),
+      0 0 50px rgba(220, 38, 38, 0.5),
+      inset 0 0 20px rgba(255, 107, 53, 0.15);
+  }
+}
+
+.explosion-option {
+  animation: optionWobble 0.4s ease-in-out infinite;
+  position: relative;
+}
+
+.explosion-option::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(45deg, #dc2626, #ff6b35, #dc2626, #ff6b35);
+  background-size: 300% 300%;
+  z-index: -1;
+  opacity: 0.6;
+  animation: gradientShift 1s ease infinite;
+  border-radius: 0.5rem;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes optionWobble {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.05); }
+}
+
+/* ========== 反应动力学 - 结晶模式 ========== */
+.crystal-mode-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center,
+    rgba(59, 130, 246, 0.1) 0%,
+    rgba(147, 197, 253, 0.2) 30%,
+    rgba(37, 99, 235, 0.25) 60%,
+    rgba(30, 64, 175, 0.35) 100%);
+  animation: crystalFadeIn 0.3s ease-out, crystalFadeOut 0.4s ease-in 1.4s forwards;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crystal-mode-content {
+  text-align: center;
+  animation: crystalFloat 2s ease-in-out infinite, crystalScaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.crystal-mode-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 2.2rem;
+  color: #bfdbfe;
+  text-shadow:
+    0 0 10px rgba(59, 130, 246, 0.8),
+    0 0 20px rgba(59, 130, 246, 0.6),
+    0 0 40px rgba(147, 197, 253, 0.4);
+  letter-spacing: 0.08em;
+}
+
+.crystal-mode-subtitle {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  color: #dbeafe;
+  margin-top: 0.5rem;
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+}
+
+@keyframes crystalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes crystalFadeOut {
+  to { opacity: 0; }
+}
+
+@keyframes crystalFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes crystalScaleIn {
+  from { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+  to { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes crystal-spin {
+  0% { transform: rotate(0deg) scale(1); filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.8)); }
+  50% { transform: rotate(180deg) scale(1.1); filter: drop-shadow(0 0 40px rgba(147, 197, 253, 1)); }
+  100% { transform: rotate(360deg) scale(1); filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.8)); }
+}
+
+.animate-crystal-spin {
+  animation: crystal-spin 1.2s ease-in-out infinite;
+}
+
+.crystal-mode-border {
+  animation: crystalBorderGlow 1.5s ease-in-out infinite;
+  box-shadow:
+    0 0 15px rgba(59, 130, 246, 0.4),
+    0 0 30px rgba(59, 130, 246, 0.2),
+    inset 0 0 15px rgba(147, 197, 253, 0.1);
+}
+
+@keyframes crystalBorderGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 15px rgba(59, 130, 246, 0.4),
+      0 0 30px rgba(59, 130, 246, 0.2),
+      inset 0 0 15px rgba(147, 197, 253, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 25px rgba(147, 197, 253, 0.6),
+      0 0 50px rgba(59, 130, 246, 0.4),
+      inset 0 0 20px rgba(147, 197, 253, 0.15);
+  }
+}
+
+.crystal-global-bg {
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(147, 197, 253, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(191, 219, 254, 0.05) 0%, transparent 60%);
+  animation: crystalBgShift 8s ease-in-out infinite;
+}
+
+@keyframes crystalBgShift {
+  0%, 100% { background-position: 0% 0%, 100% 100%, 50% 50%; }
+  50% { background-position: 10% 10%, 90% 90%, 45% 55%; }
+}
+
+/* ========== 活化能曲线动画 ========== */
+.activation-curve-path {
+  stroke-dasharray: 8 4;
+  animation:
+    activationDash 3s linear infinite,
+    activationPulse 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+@keyframes activationDash {
+  to { stroke-dashoffset: -24; }
+}
+
+@keyframes activationPulse {
+  0%, 100% { stroke-width: 3; }
+  50% { stroke-width: 4; }
+}
+
+/* ========== 额外响应式优化 ========== */
+@media (max-width: 640px) {
+  .explosion-danger-title {
+    font-size: 1.5rem;
+  }
+  .crystal-mode-title {
+    font-size: 1.3rem;
+  }
+}

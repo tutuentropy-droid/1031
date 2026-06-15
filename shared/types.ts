@@ -51,6 +51,46 @@ export interface HistoricalRevolution {
 
 export type GameStatus = 'idle' | 'playing' | 'answered' | 'unlock' | 'gameover' | 'chainReaction' | 'phlogistonTrap' | 'revolutionUnlock';
 
+export type ReactionMode = 'normal' | 'explosion' | 'crystal';
+
+export type ChemistryLanguageStyle = 'classic' | 'modern';
+
+export interface KineticsState {
+  activationEnergy: number;
+  reactionMode: ReactionMode;
+  answerStartTime: number;
+  answerResponseTimes: number[];
+  consecutiveSlowCorrect: number;
+  consecutiveFastWrong: number;
+  explosionIntensity: number;
+  explosionShakeOptions: boolean;
+  isCrystalMode: boolean;
+  crystalInputAnswer: string;
+  chemistryLanguageStyle: ChemistryLanguageStyle;
+}
+
+export interface Question {
+  id: string;
+  chemistId: string;
+  description: string;
+  descriptionModern?: string;
+  options: string[];
+  optionsModern?: string[];
+  correctIndex: number;
+  explanation: string;
+  explanationModern?: string;
+  historicalContext: string;
+  answerKeywords?: string[];
+}
+
+export interface SubmitAnswerRequest {
+  questionId: string;
+  selectedIndex: number;
+  currentTemperature: number;
+  responseTime?: number;
+  crystalTextAnswer?: string;
+}
+
 export interface Element {
   id: string;
   symbol: string;

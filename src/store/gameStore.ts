@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Chemist, Question, FunFact, GameStatus, SubmitAnswerResponse, Element, CellOwner, ElementFact, SubmitPeriodicAnswerResponse, HistoricalRevolution } from '../../shared/types';
+import type { Chemist, Question, FunFact, GameStatus, SubmitAnswerResponse, Element, CellOwner, ElementFact, SubmitPeriodicAnswerResponse, HistoricalRevolution, ReactionMode, ChemistryLanguageStyle } from '../../shared/types';
 
 interface GameState {
   selectedChemist: Chemist | null;
@@ -45,6 +45,18 @@ interface GameState {
   periodicAnswerResult: SubmitPeriodicAnswerResponse | null;
   periodicCurrentElementFact: ElementFact | null;
   periodicShowElementFact: boolean;
+
+  activationEnergy: number;
+  reactionMode: ReactionMode;
+  answerStartTime: number;
+  answerResponseTimes: number[];
+  consecutiveSlowCorrect: number;
+  consecutiveFastWrong: number;
+  explosionIntensity: number;
+  explosionShakeOptions: boolean;
+  isCrystalMode: boolean;
+  crystalInputAnswer: string;
+  chemistryLanguageStyle: ChemistryLanguageStyle;
 
   selectChemist: (chemist: Chemist) => void;
   setCurrentQuestion: (question: Question | null) => void;
@@ -94,6 +106,27 @@ interface GameState {
   setPeriodicCurrentElementFact: (fact: ElementFact | null) => void;
   setPeriodicShowElementFact: (show: boolean) => void;
   resetPeriodicGame: () => void;
+
+  setActivationEnergy: (energy: number) => void;
+  lowerActivationEnergy: (amount: number) => void;
+  raiseActivationEnergy: (amount: number) => void;
+  setReactionMode: (mode: ReactionMode) => void;
+  setAnswerStartTime: (time: number) => void;
+  addResponseTime: (time: number) => void;
+  incrementConsecutiveSlowCorrect: () => void;
+  resetConsecutiveSlowCorrect: () => void;
+  incrementConsecutiveFastWrong: () => void;
+  resetConsecutiveFastWrong: () => void;
+  setExplosionIntensity: (intensity: number) => void;
+  setExplosionShakeOptions: (shake: boolean) => void;
+  triggerExplosionMode: () => void;
+  exitExplosionMode: () => void;
+  setIsCrystalMode: (val: boolean) => void;
+  setCrystalInputAnswer: (answer: string) => void;
+  triggerCrystalMode: () => void;
+  exitCrystalMode: () => void;
+  setChemistryLanguageStyle: (style: ChemistryLanguageStyle) => void;
+  toggleChemistryLanguageStyle: () => void;
 }
 
 const INITIAL_TEMPERATURE = 50;
@@ -211,6 +244,16 @@ export const useGameStore = create<GameState>((set) => ({
     labCoatShields: 0,
     isPhlogistonSmoke: false,
     phlogistonTrapExplanation: '',
+    activationEnergy: 80,
+    reactionMode: 'normal',
+    answerStartTime: 0,
+    answerResponseTimes: [],
+    consecutiveSlowCorrect: 0,
+    consecutiveFastWrong: 0,
+    explosionIntensity: 0,
+    explosionShakeOptions: false,
+    isCrystalMode: false,
+    crystalInputAnswer: '',
   }),
 
   periodicBoard: {},
@@ -230,6 +273,18 @@ export const useGameStore = create<GameState>((set) => ({
   periodicAnswerResult: null,
   periodicCurrentElementFact: null,
   periodicShowElementFact: false,
+
+  activationEnergy: 80,
+  reactionMode: 'normal',
+  answerStartTime: 0,
+  answerResponseTimes: [],
+  consecutiveSlowCorrect: 0,
+  consecutiveFastWrong: 0,
+  explosionIntensity: 0,
+  explosionShakeOptions: false,
+  isCrystalMode: false,
+  crystalInputAnswer: '',
+  chemistryLanguageStyle: 'classic',
 
   initPeriodicGame: () => set({
     periodicBoard: {},
@@ -253,8 +308,8 @@ export const useGameStore = create<GameState>((set) => ({
 
   setPeriodicBoard: (board) => set({
     periodicBoard: board,
-    periodicPlayerCells: Object.entries(board).filter(([_, v]) => v === 'player').map(([k]) => k),
-    periodicAiCells: Object.entries(board).filter(([_, v]) => v === 'ai').map(([k]) => k),
+    periodicPlayerCells: Object.entries(board).filter((entry) => entry[1] === 'player').map((entry) => entry[0]),
+    periodicAiCells: Object.entries(board).filter((entry) => entry[1] === 'ai').map((entry) => entry[0]),
   }),
 
   setPeriodicSelectedElement: (elementId) => set({ periodicSelectedElementId: elementId }),
@@ -293,4 +348,57 @@ export const useGameStore = create<GameState>((set) => ({
     periodicCurrentElementFact: null,
     periodicShowElementFact: false,
   }),
+
+  setActivationEnergy: (energy) => set({
+    activationEnergy: Math.max(0, Math.min(100, energy)),
+  }),
+  lowerActivationEnergy: (amount) => set((state) => ({
+    activationEnergy: Math.max(0, state.activationEnergy - amount),
+  })),
+  raiseActivationEnergy: (amount) => set((state) => ({
+    activationEnergy: Math.min(100, state.activationEnergy + amount),
+  })),
+  setReactionMode: (mode) => set({ reactionMode: mode }),
+  setAnswerStartTime: (time) => set({ answerStartTime: time }),
+  addResponseTime: (time) => set((state) => ({
+    answerResponseTimes: [...state.answerResponseTimes.slice(-9), time],
+  })),
+  incrementConsecutiveSlowCorrect: () => set((state) => ({
+    consecutiveSlowCorrect: state.consecutiveSlowCorrect + 1,
+  })),
+  resetConsecutiveSlowCorrect: () => set({ consecutiveSlowCorrect: 0 }),
+  incrementConsecutiveFastWrong: () => set((state) => ({
+    consecutiveFastWrong: state.consecutiveFastWrong + 1,
+  })),
+  resetConsecutiveFastWrong: () => set({ consecutiveFastWrong: 0 }),
+  setExplosionIntensity: (intensity) => set({
+    explosionIntensity: Math.max(0, Math.min(100, intensity)),
+  }),
+  setExplosionShakeOptions: (shake) => set({ explosionShakeOptions: shake }),
+  triggerExplosionMode: () => set({
+    reactionMode: 'explosion',
+    explosionShakeOptions: true,
+    explosionIntensity: 80,
+  }),
+  exitExplosionMode: () => set({
+    reactionMode: 'normal',
+    explosionShakeOptions: false,
+    explosionIntensity: 0,
+  }),
+  setIsCrystalMode: (val) => set({ isCrystalMode: val }),
+  setCrystalInputAnswer: (answer) => set({ crystalInputAnswer: answer }),
+  triggerCrystalMode: () => set({
+    reactionMode: 'crystal',
+    isCrystalMode: true,
+    crystalInputAnswer: '',
+  }),
+  exitCrystalMode: () => set({
+    reactionMode: 'normal',
+    isCrystalMode: false,
+    crystalInputAnswer: '',
+  }),
+  setChemistryLanguageStyle: (style) => set({ chemistryLanguageStyle: style }),
+  toggleChemistryLanguageStyle: () => set((state) => ({
+    chemistryLanguageStyle: state.chemistryLanguageStyle === 'classic' ? 'modern' : 'classic',
+  })),
 }));
