@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '@/store/gameStore';
 import { api } from '@/utils/api';
 import AlchemyFurnace from '@/components/AlchemyFurnace';
 import QuestionCard from '@/components/QuestionCard';
+import CatalystPanel from '@/components/CatalystPanel';
 import type { SubmitAnswerResponse } from '../../shared/types';
 import { Home, RotateCcw, Trophy, HelpCircle } from 'lucide-react';
 
@@ -20,6 +21,11 @@ const Game: React.FC = () => {
     score,
     questionsAnswered,
     correctAnswers,
+    catalystQuanta,
+    consecutiveCorrect,
+    isChainReaction,
+    isCatalystActive,
+    showLavoisierSpeech,
     setCurrentQuestion,
     setTemperature,
     setGameStatus,
@@ -30,10 +36,22 @@ const Game: React.FC = () => {
     incrementScore,
     incrementQuestionsAnswered,
     resetGame,
+    incrementConsecutiveCorrect,
+    resetConsecutiveCorrect,
+    setIsChainReaction,
+    setIsCatalystActive,
+    setShowLavoisierSpeech,
   } = useGameStore();
 
   const [loading, setLoading] = useState(true);
   const [shakeScreen, setShakeScreen] = useState(false);
+  const lavoisierTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const triggerLavoisierSpeech = useCallback(() => {
+    if (lavoisierTimerRef.current) clearTimeout(lavoisierTimerRef.current);
+    setShowLavoisierSpeech(true);
+    lavoisierTimerRef.current = setTimeout(() => setShowLavoisierSpeech(false), 2500);
+  }, [setShowLavoisierSpeech]);
 
   const loadFirstQuestion = useCallback(async () => {
     if (!selectedChemist) return;
@@ -58,8 +76,39 @@ const Game: React.FC = () => {
     loadFirstQuestion();
   }, [selectedChemist, navigate, loadFirstQuestion]);
 
+  useEffect(() => {
+    if (isChainReaction && gameStatus === 'playing' && currentQuestion) {
+      setGameStatus('chainReaction');
+      triggerLavoisierSpeech();
+    }
+  }, [isChainReaction, gameStatus, currentQuestion, setGameStatus, triggerLavoisierSpeech]);
+
   const handleAnswer = useCallback(async (index: number) => {
-    if (!currentQuestion || gameStatus !== 'playing') return;
+    if (!currentQuestion || (gameStatus !== 'playing' && gameStatus !== 'chainReaction')) return;
+
+    const usingCatalyst = isCatalystActive;
+
+    if (usingCatalyst) {
+      setSelectedAnswer(currentQuestion.correctIndex);
+      setGameStatus('answered');
+      setTemperature(temperature);
+      incrementQuestionsAnswered(true);
+      setIsCatalystActive(false);
+
+      setLastAnswerResult({
+        isCorrect: true,
+        correctIndex: currentQuestion.correctIndex,
+        explanation: currentQuestion.explanation,
+        newTemperature: temperature,
+        shouldUnlock: false,
+        gameOver: false,
+      });
+
+      setTimeout(() => {
+        loadNextQuestion();
+      }, 3000);
+      return;
+    }
 
     setSelectedAnswer(index);
     setGameStatus('answered');
@@ -77,7 +126,12 @@ const Game: React.FC = () => {
       
       if (result.isCorrect) {
         incrementScore(100);
+        incrementConsecutiveCorrect();
+        if (consecutiveCorrect + 1 >= 3) {
+          triggerLavoisierSpeech();
+        }
       } else {
+        resetConsecutiveCorrect();
         setIsSmoking(true);
         setShakeScreen(true);
         setTimeout(() => setShakeScreen(false), 500);
@@ -98,18 +152,73 @@ const Game: React.FC = () => {
       }
 
       setTimeout(() => {
-        if (result.nextQuestion) {
-          setCurrentQuestion(result.nextQuestion);
-          setSelectedAnswer(null);
-          setLastAnswerResult(null);
-          setGameStatus('playing');
-        }
+        loadNextQuestion(result);
       }, 3000);
 
     } catch (error) {
       console.error('Failed to submit answer:', error);
     }
-  }, [currentQuestion, gameStatus, temperature, navigate, setCurrentQuestion, setTemperature, setGameStatus, setSelectedAnswer, setIsSmoking, setLastAnswerResult, unlockFact, incrementScore, incrementQuestionsAnswered]);
+  }, [currentQuestion, gameStatus, temperature, isCatalystActive, consecutiveCorrect, navigate, setCurrentQuestion, setTemperature, setGameStatus, setSelectedAnswer, setIsSmoking, setLastAnswerResult, unlockFact, incrementScore, incrementQuestionsAnswered, incrementConsecutiveCorrect, resetConsecutiveCorrect, setIsCatalystActive, triggerLavoisierSpeech]);
+
+  const handleChainReactionConfirm = useCallback(async (correctIndex: number) => {
+    if (!currentQuestion || gameStatus !== 'chainReaction') return;
+
+    setSelectedAnswer(correctIndex);
+    setGameStatus('answered');
+
+    try {
+      const result: SubmitAnswerResponse = await api.submitAnswer({
+        questionId: currentQuestion.id,
+        selectedIndex: correctIndex,
+        currentTemperature: temperature,
+      });
+
+      setLastAnswerResult(result);
+      setTemperature(result.newTemperature);
+      incrementQuestionsAnswered(true);
+      incrementScore(200);
+      incrementConsecutiveCorrect();
+
+      setIsChainReaction(false);
+
+      if (result.shouldUnlock && result.unlockedFact) {
+        unlockFact(result.unlockedFact);
+        setTimeout(() => {
+          navigate('/unlock');
+        }, 2500);
+        return;
+      }
+
+      if (result.gameOver) {
+        setGameStatus('gameover');
+        return;
+      }
+
+      setTimeout(() => {
+        loadNextQuestion(result);
+      }, 3000);
+
+    } catch (error) {
+      console.error('Failed to submit chain reaction answer:', error);
+    }
+  }, [currentQuestion, gameStatus, temperature, navigate, setTemperature, setGameStatus, setSelectedAnswer, setLastAnswerResult, unlockFact, incrementScore, incrementQuestionsAnswered, incrementConsecutiveCorrect, setIsChainReaction]);
+
+  const loadNextQuestion = useCallback(async (result?: SubmitAnswerResponse) => {
+    try {
+      let nextQuestion = result?.nextQuestion;
+      if (!nextQuestion && selectedChemist) {
+        nextQuestion = await api.getQuestion(selectedChemist.id);
+      }
+      if (nextQuestion) {
+        setCurrentQuestion(nextQuestion);
+        setSelectedAnswer(null);
+        setLastAnswerResult(null);
+        setGameStatus(isChainReaction ? 'chainReaction' : 'playing');
+      }
+    } catch (error) {
+      console.error('Failed to load next question:', error);
+    }
+  }, [selectedChemist, isChainReaction, setCurrentQuestion, setSelectedAnswer, setLastAnswerResult, setGameStatus]);
 
   const handleRestart = () => {
     resetGame();
@@ -150,7 +259,7 @@ const Game: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-b from-alchemy-darkBrown via-alchemy-brown to-alchemy-darkBrown py-6 px-4 noise-overlay ${shakeScreen ? 'animate-shake' : ''}`}>
+    <div className={`min-h-screen bg-gradient-to-b from-alchemy-darkBrown via-alchemy-brown to-alchemy-darkBrown py-6 px-4 noise-overlay ${shakeScreen ? 'animate-shake' : ''} ${isChainReaction ? 'chain-reaction-bg' : ''}`}>
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <button
@@ -193,8 +302,10 @@ const Game: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           <div className="fade-in-up">
             <AlchemyFurnace />
-            
-            <div className="mt-6 flex justify-center gap-4">
+            <div className="mt-6">
+              <CatalystPanel />
+            </div>
+            <div className="mt-4 flex justify-center gap-4">
               <button
                 onClick={handleRetry}
                 className="flex items-center gap-2 px-4 py-2 brass-button rounded-lg text-alchemy-darkBrown font-display text-sm"
@@ -210,11 +321,14 @@ const Game: React.FC = () => {
               <QuestionCard
                 question={currentQuestion}
                 onAnswer={handleAnswer}
-                disabled={gameStatus !== 'playing'}
+                onChainReactionConfirm={handleChainReactionConfirm}
+                disabled={gameStatus !== 'playing' && gameStatus !== 'chainReaction'}
                 selectedIndex={selectedAnswer}
                 correctIndex={lastAnswerResult?.correctIndex}
                 showExplanation={gameStatus === 'answered'}
                 explanation={lastAnswerResult?.explanation}
+                isChainReactionMode={gameStatus === 'chainReaction'}
+                isCatalystUsed={isCatalystActive && gameStatus === 'answered'}
               />
             )}
 
@@ -242,8 +356,8 @@ const Game: React.FC = () => {
                     <div className="text-2xl font-display text-alchemy-flame">{score}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-alchemy-brown">解锁冷知识</div>
-                    <div className="text-2xl font-display text-alchemy-emerald">{unlockedFacts.length}</div>
+                    <div className="text-sm text-alchemy-brown">催化剂</div>
+                    <div className="text-2xl font-display text-yellow-400">⚛️ {catalystQuanta}</div>
                   </div>
                 </div>
 
@@ -290,9 +404,10 @@ const Game: React.FC = () => {
             <HelpCircle className="w-5 h-5 text-alchemy-copper flex-shrink-0 mt-0.5" />
             <div className="text-left text-sm text-alchemy-copperDark">
               <p className="font-semibold text-alchemy-copper">游戏提示：</p>
-              <p>答对问题可使反应炉温度升高 +15°C，答错则会骤降 -25°C 并冒烟。</p>
-              <p>当温度达到 100°C 时，即可解锁一条关于 {selectedChemist.name} 的化学史冷知识！</p>
-              <p>温度降至 0°C 则游戏结束。</p>
+              <p>答对 +15°C，答错 -25°C 并冒烟。满 100°C 解锁冷知识！</p>
+              <p className="mt-1 font-semibold text-alchemy-flame">⚗️ 催化剂连击系统：</p>
+              <p>每 2 次正确 → 积累 1 催化剂量子 | 消耗量子 → 自动正确(不加分，仅保温度)</p>
+              <p>连续 3 次正确不消耗 → <span className="text-alchemy-flame font-bold">链式反应</span> → 下一题双倍得分！⚛️</p>
             </div>
           </div>
         </div>

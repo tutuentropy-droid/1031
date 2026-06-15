@@ -10,7 +10,7 @@ interface SmokeParticle {
 }
 
 const AlchemyFurnace: React.FC = () => {
-  const { temperature, isSmoking, selectedChemist } = useGameStore();
+  const { temperature, isSmoking, selectedChemist, showLavoisierSpeech, isChainReaction } = useGameStore();
   const [smokeParticles, setSmokeParticles] = useState<SmokeParticle[]>([]);
   const [showTempChange, setShowTempChange] = useState<number | null>(null);
   const [prevTemp, setPrevTemp] = useState(temperature);
@@ -168,19 +168,19 @@ const AlchemyFurnace: React.FC = () => {
               
               <path
                 d="M80 55 Q90 10 100 20 Q110 10 120 55 Q110 35 100 40 Q90 35 80 55"
-                fill="#FFD700"
+                fill={isChainReaction ? "#00FFFF" : "#FFD700"}
                 className="animate-flicker"
                 style={{ transformOrigin: 'center bottom' }}
               />
               <path
                 d="M85 55 Q92 25 100 30 Q108 25 115 55 Q108 40 100 45 Q92 40 85 55"
-                fill="#FF6B35"
+                fill={isChainReaction ? "#00CCFF" : "#FF6B35"}
                 className="animate-flicker"
                 style={{ animationDelay: '0.3s', transformOrigin: 'center bottom' }}
               />
               <path
                 d="M90 55 Q95 35 100 38 Q105 35 110 55 Q105 45 100 48 Q95 45 90 55"
-                fill="#FF4500"
+                fill={isChainReaction ? "#0099FF" : "#FF4500"}
                 className="animate-flicker"
                 style={{ animationDelay: '0.6s', transformOrigin: 'center bottom' }}
               />
@@ -250,10 +250,23 @@ const AlchemyFurnace: React.FC = () => {
         </div>
       </div>
 
+      {showLavoisierSpeech && (
+        <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 z-20 lavoisier-speech">
+          <div className="relative">
+            <div className="bg-alchemy-flame text-white px-4 py-2 rounded-lg font-display text-lg whitespace-nowrap shadow-lg shadow-alchemy-flame/50">
+              🔬 测量一切！
+            </div>
+            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-alchemy-flame" />
+          </div>
+        </div>
+      )}
+
       <div className="mt-4 text-center">
         <h3 className="text-xl font-display text-alchemy-copper">炼金反应炉</h3>
         <p className="text-sm text-alchemy-copperDark mt-1">
-          {temperature < 25 ? '🔥 温度过低！反应即将停止...' :
+          {isChainReaction
+            ? '⚛️ 链式反应中！反应炉正在释放量子能量！'
+            : temperature < 25 ? '🔥 温度过低！反应即将停止...' :
            temperature < 50 ? '⚗️ 温度适中，继续炼金吧！' :
            temperature < 75 ? '🌡️ 温度上升中，快要沸腾了！' :
            '💥 温度极高！小心爆炸！'}

@@ -41,4 +41,4 @@ export interface SubmitAnswerResponse {
   nextQuestion?: Question;
 }
 
-export type GameStatus = 'idle' | 'playing' | 'answered' | 'unlock' | 'gameover';
+export type GameStatus = 'idle' | 'playing' | 'answered' | 'unlock' | 'gameover' | 'chainReaction';

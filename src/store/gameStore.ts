@@ -14,6 +14,11 @@ interface GameState {
   score: number;
   questionsAnswered: number;
   correctAnswers: number;
+  catalystQuanta: number;
+  consecutiveCorrect: number;
+  isChainReaction: boolean;
+  isCatalystActive: boolean;
+  showLavoisierSpeech: boolean;
 
   selectChemist: (chemist: Chemist) => void;
   setCurrentQuestion: (question: Question | null) => void;
@@ -27,6 +32,13 @@ interface GameState {
   incrementScore: (points: number) => void;
   incrementQuestionsAnswered: (correct: boolean) => void;
   resetGame: () => void;
+  addCatalyst: () => void;
+  useCatalyst: () => void;
+  incrementConsecutiveCorrect: () => void;
+  resetConsecutiveCorrect: () => void;
+  setIsChainReaction: (val: boolean) => void;
+  setIsCatalystActive: (val: boolean) => void;
+  setShowLavoisierSpeech: (val: boolean) => void;
 }
 
 const INITIAL_TEMPERATURE = 50;
@@ -44,6 +56,11 @@ export const useGameStore = create<GameState>((set) => ({
   score: 0,
   questionsAnswered: 0,
   correctAnswers: 0,
+  catalystQuanta: 0,
+  consecutiveCorrect: 0,
+  isChainReaction: false,
+  isCatalystActive: false,
+  showLavoisierSpeech: false,
 
   selectChemist: (chemist) => set({ selectedChemist: chemist }),
   setCurrentQuestion: (question) => set({ currentQuestion: question }),
@@ -62,6 +79,25 @@ export const useGameStore = create<GameState>((set) => ({
     questionsAnswered: state.questionsAnswered + 1,
     correctAnswers: state.correctAnswers + (correct ? 1 : 0),
   })),
+  addCatalyst: () => set((state) => ({ catalystQuanta: state.catalystQuanta + 1 })),
+  useCatalyst: () => set((state) => ({
+    catalystQuanta: Math.max(0, state.catalystQuanta - 1),
+    isCatalystActive: true,
+  })),
+  incrementConsecutiveCorrect: () => set((state) => {
+    const newCount = state.consecutiveCorrect + 1;
+    const shouldAddCatalyst = newCount % 2 === 0;
+    const shouldChainReact = newCount >= 3 && !state.isChainReaction;
+    return {
+      consecutiveCorrect: newCount,
+      ...(shouldAddCatalyst ? { catalystQuanta: state.catalystQuanta + 1 } : {}),
+      ...(shouldChainReact ? { isChainReaction: true } : {}),
+    };
+  }),
+  resetConsecutiveCorrect: () => set({ consecutiveCorrect: 0, isChainReaction: false }),
+  setIsChainReaction: (val) => set({ isChainReaction: val }),
+  setIsCatalystActive: (val) => set({ isCatalystActive: val }),
+  setShowLavoisierSpeech: (val) => set({ showLavoisierSpeech: val }),
   resetGame: () => set({
     selectedChemist: null,
     currentQuestion: null,
@@ -74,5 +110,10 @@ export const useGameStore = create<GameState>((set) => ({
     score: 0,
     questionsAnswered: 0,
     correctAnswers: 0,
+    catalystQuanta: 0,
+    consecutiveCorrect: 0,
+    isChainReaction: false,
+    isCatalystActive: false,
+    showLavoisierSpeech: false,
   }),
 }));

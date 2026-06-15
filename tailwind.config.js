@@ -37,6 +37,9 @@ export default {
         'float': 'float 3s ease-in-out infinite',
         'typewriter': 'typewriter 2s steps(40) forwards',
         'unlock': 'unlock 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+        'catalyst-pulse': 'catalystPulse 1.5s ease-in-out infinite',
+        'chain-reaction-glow': 'chainReactionGlow 1s ease-in-out infinite',
+        'lavoisier-entrance': 'lavoisierEntrance 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
       },
       keyframes: {
         flicker: {
@@ -67,6 +70,18 @@ export default {
         unlock: {
           '0%': { transform: 'scale(0.8) rotate(-10deg)', opacity: '0' },
           '100%': { transform: 'scale(1) rotate(0)', opacity: '1' },
+        },
+        catalystPulse: {
+          '0%, 100%': { boxShadow: '0 0 8px rgba(255, 107, 53, 0.4), inset 0 0 8px rgba(255, 107, 53, 0.1)' },
+          '50%': { boxShadow: '0 0 20px rgba(255, 107, 53, 0.8), inset 0 0 15px rgba(255, 107, 53, 0.2)' },
+        },
+        chainReactionGlow: {
+          '0%, 100%': { boxShadow: '0 0 10px rgba(0, 255, 255, 0.3), 0 0 20px rgba(255, 107, 53, 0.2)' },
+          '50%': { boxShadow: '0 0 25px rgba(0, 255, 255, 0.6), 0 0 50px rgba(255, 107, 53, 0.4)' },
+        },
+        lavoisierEntrance: {
+          '0%': { transform: 'translateX(-50%) scale(0.5) translateY(10px)', opacity: '0' },
+          '100%': { transform: 'translateX(-50%) scale(1) translateY(0)', opacity: '1' },
         },
       },
     },
