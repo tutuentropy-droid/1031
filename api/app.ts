@@ -14,6 +14,9 @@ import chemistRoutes from './routes/chemists.js'
 import questionRoutes from './routes/questions.js'
 import gameRoutes from './routes/game.js'
 import funFactRoutes from './routes/funFacts.js'
+import elementRoutes from './routes/elements.js'
+import elementFactRoutes from './routes/elementFacts.js'
+import periodicGameRoutes from './routes/periodicGame.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -36,6 +39,9 @@ app.use('/api/chemists', chemistRoutes)
 app.use('/api/questions', questionRoutes)
 app.use('/api/game', gameRoutes)
 app.use('/api/fun-facts', funFactRoutes)
+app.use('/api/elements', elementRoutes)
+app.use('/api/element-facts', elementFactRoutes)
+app.use('/api/periodic-game', periodicGameRoutes)
 
 /**
  * health

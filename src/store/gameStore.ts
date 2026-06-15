@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Chemist, Question, FunFact, GameStatus, SubmitAnswerResponse } from '../../shared/types';
+import type { Chemist, Question, FunFact, GameStatus, SubmitAnswerResponse, Element, CellOwner, ElementFact, SubmitPeriodicAnswerResponse } from '../../shared/types';
 
 interface GameState {
   selectedChemist: Chemist | null;
@@ -20,6 +20,24 @@ interface GameState {
   isCatalystActive: boolean;
   showLavoisierSpeech: boolean;
 
+  periodicBoard: Record<string, CellOwner>;
+  periodicPlayerCells: string[];
+  periodicAiCells: string[];
+  periodicProphecyCount: number;
+  periodicCurrentProphecy: string | null;
+  periodicSelectedElementId: string | null;
+  periodicIsProphecyMode: boolean;
+  periodicAiThinking: boolean;
+  periodicLastCapturedElement: Element | null;
+  periodicLastLostElement: Element | null;
+  periodicCompletedLines: { type: 'row' | 'col'; index: number; owner: CellOwner }[];
+  periodicGameWinner: CellOwner;
+  periodicGameOver: boolean;
+  periodicScore: number;
+  periodicAnswerResult: SubmitPeriodicAnswerResponse | null;
+  periodicCurrentElementFact: ElementFact | null;
+  periodicShowElementFact: boolean;
+
   selectChemist: (chemist: Chemist) => void;
   setCurrentQuestion: (question: Question | null) => void;
   setTemperature: (temp: number) => void;
@@ -39,6 +57,23 @@ interface GameState {
   setIsChainReaction: (val: boolean) => void;
   setIsCatalystActive: (val: boolean) => void;
   setShowLavoisierSpeech: (val: boolean) => void;
+
+  initPeriodicGame: () => void;
+  setPeriodicBoard: (board: Record<string, CellOwner>) => void;
+  setPeriodicSelectedElement: (elementId: string | null) => void;
+  setPeriodicIsProphecyMode: (isProphecy: boolean) => void;
+  setPeriodicCurrentProphecy: (prophecy: string | null) => void;
+  incrementPeriodicProphecyCount: () => void;
+  decrementPeriodicProphecyCount: () => void;
+  setPeriodicAiThinking: (thinking: boolean) => void;
+  setPeriodicAnswerResult: (result: SubmitPeriodicAnswerResponse | null) => void;
+  addPeriodicCompletedLine: (line: { type: 'row' | 'col'; index: number; owner: CellOwner }) => void;
+  setPeriodicGameWinner: (winner: CellOwner) => void;
+  setPeriodicGameOver: (over: boolean) => void;
+  incrementPeriodicScore: (points: number) => void;
+  setPeriodicCurrentElementFact: (fact: ElementFact | null) => void;
+  setPeriodicShowElementFact: (show: boolean) => void;
+  resetPeriodicGame: () => void;
 }
 
 const INITIAL_TEMPERATURE = 50;
@@ -115,5 +150,84 @@ export const useGameStore = create<GameState>((set) => ({
     isChainReaction: false,
     isCatalystActive: false,
     showLavoisierSpeech: false,
+  }),
+
+  periodicBoard: {},
+  periodicPlayerCells: [],
+  periodicAiCells: [],
+  periodicProphecyCount: 0,
+  periodicCurrentProphecy: null,
+  periodicSelectedElementId: null,
+  periodicIsProphecyMode: false,
+  periodicAiThinking: false,
+  periodicLastCapturedElement: null,
+  periodicLastLostElement: null,
+  periodicCompletedLines: [],
+  periodicGameWinner: null,
+  periodicGameOver: false,
+  periodicScore: 0,
+  periodicAnswerResult: null,
+  periodicCurrentElementFact: null,
+  periodicShowElementFact: false,
+
+  initPeriodicGame: () => set({
+    periodicBoard: {},
+    periodicPlayerCells: [],
+    periodicAiCells: [],
+    periodicProphecyCount: 0,
+    periodicCurrentProphecy: null,
+    periodicSelectedElementId: null,
+    periodicIsProphecyMode: false,
+    periodicAiThinking: false,
+    periodicLastCapturedElement: null,
+    periodicLastLostElement: null,
+    periodicCompletedLines: [],
+    periodicGameWinner: null,
+    periodicGameOver: false,
+    periodicScore: 0,
+    periodicAnswerResult: null,
+    periodicCurrentElementFact: null,
+    periodicShowElementFact: false,
+  }),
+
+  setPeriodicBoard: (board) => set({
+    periodicBoard: board,
+    periodicPlayerCells: Object.entries(board).filter(([_, v]) => v === 'player').map(([k]) => k),
+    periodicAiCells: Object.entries(board).filter(([_, v]) => v === 'ai').map(([k]) => k),
+  }),
+
+  setPeriodicSelectedElement: (elementId) => set({ periodicSelectedElementId: elementId }),
+  setPeriodicIsProphecyMode: (isProphecy) => set({ periodicIsProphecyMode: isProphecy }),
+  setPeriodicCurrentProphecy: (prophecy) => set({ periodicCurrentProphecy: prophecy }),
+  incrementPeriodicProphecyCount: () => set((state) => ({ periodicProphecyCount: state.periodicProphecyCount + 1 })),
+  decrementPeriodicProphecyCount: () => set((state) => ({ periodicProphecyCount: Math.max(0, state.periodicProphecyCount - 1) })),
+  setPeriodicAiThinking: (thinking) => set({ periodicAiThinking: thinking }),
+  setPeriodicAnswerResult: (result) => set({ periodicAnswerResult: result }),
+  addPeriodicCompletedLine: (line) => set((state) => ({
+    periodicCompletedLines: [...state.periodicCompletedLines, line],
+  })),
+  setPeriodicGameWinner: (winner) => set({ periodicGameWinner: winner }),
+  setPeriodicGameOver: (over) => set({ periodicGameOver: over }),
+  incrementPeriodicScore: (points) => set((state) => ({ periodicScore: state.periodicScore + points })),
+  setPeriodicCurrentElementFact: (fact) => set({ periodicCurrentElementFact: fact }),
+  setPeriodicShowElementFact: (show) => set({ periodicShowElementFact: show }),
+  resetPeriodicGame: () => set({
+    periodicBoard: {},
+    periodicPlayerCells: [],
+    periodicAiCells: [],
+    periodicProphecyCount: 0,
+    periodicCurrentProphecy: null,
+    periodicSelectedElementId: null,
+    periodicIsProphecyMode: false,
+    periodicAiThinking: false,
+    periodicLastCapturedElement: null,
+    periodicLastLostElement: null,
+    periodicCompletedLines: [],
+    periodicGameWinner: null,
+    periodicGameOver: false,
+    periodicScore: 0,
+    periodicAnswerResult: null,
+    periodicCurrentElementFact: null,
+    periodicShowElementFact: false,
   }),
 }));

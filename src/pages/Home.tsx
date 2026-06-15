@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { Chemist } from '../../shared/types';
 import { api } from '@/utils/api';
 import { useGameStore } from '@/store/gameStore';
-import { FlaskConical, Flame, Table2, Sparkles } from 'lucide-react';
+import { FlaskConical, Flame, Table2, Sparkles, Atom, Swords } from 'lucide-react';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -152,6 +152,56 @@ const Home: React.FC = () => {
               <span className="text-2xl">🎉</span>
               <span className="text-alchemy-copperLight">满100°C解锁冷知识</span>
             </div>
+          </div>
+        </div>
+
+        <div className="mt-16 fade-in-up stagger-4">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-display text-alchemy-copperLight mb-2">⚔️ 全新游戏模式</h2>
+            <p className="text-alchemy-copperDark">与AI对战，争夺元素周期表的领地！</p>
+          </div>
+          
+          <div className="max-w-2xl mx-auto">
+            <button
+              onClick={() => navigate('/periodic-table')}
+              className="w-full p-6 rounded-xl border-4 border-alchemy-flame bg-gradient-to-r from-alchemy-flame/20 to-alchemy-copper/20 hover:from-alchemy-flame/30 hover:to-alchemy-copper/30 transition-all duration-500 transform hover:scale-102 group"
+            >
+              <div className="flex items-center gap-6">
+                <div className="relative">
+                  <div className="w-20 h-20 rounded-full bg-alchemy-flame/30 flex items-center justify-center group-hover:bg-alchemy-flame/50 transition-colors">
+                    <Atom className="w-10 h-10 text-alchemy-flame animate-pulse" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-8 h-8 bg-alchemy-emerald rounded-full flex items-center justify-center">
+                    <Swords className="w-4 h-4 text-white" />
+                  </div>
+                </div>
+                
+                <div className="flex-1 text-left">
+                  <h3 className="text-2xl font-display text-alchemy-flame mb-2 group-hover:text-alchemy-flameLight transition-colors">
+                    元素周期表争夺战
+                  </h3>
+                  <p className="text-alchemy-copperDark mb-3">
+                    答对题目占据元素格子，答错被AI抢走。占据整行或整列获得「元素预言权」，
+                    可指定下一题的化学家类型。在对战中学习元素发现的趣闻！
+                  </p>
+                  <div className="flex items-center gap-4 text-sm">
+                    <span className="flex items-center gap-1 text-alchemy-emerald">
+                      <span>🎯</span> 策略对战
+                    </span>
+                    <span className="flex items-center gap-1 text-alchemy-flame">
+                      <span>🔮</span> 预言权系统
+                    </span>
+                    <span className="flex items-center gap-1 text-alchemy-copper">
+                      <span>📚</span> 元素趣闻
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="text-alchemy-flame text-3xl group-hover:translate-x-2 transition-transform">
+                  →
+                </div>
+              </div>
+            </button>
           </div>
         </div>
 

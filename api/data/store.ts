@@ -1,4 +1,4 @@
-import type { Chemist, Question, FunFact } from '../../shared/types';
+import type { Chemist, Question, FunFact, Element, ElementFact, CellOwner } from '../../shared/types';
 
 export const chemists: Chemist[] = [
   {
@@ -308,4 +308,140 @@ export function getQuestionById(id: string): Question | undefined {
 
 export function getChemistById(id: string): Chemist | undefined {
   return chemists.find(c => c.id === id);
+}
+
+export const elements: Element[] = [
+  { id: 'h', symbol: 'H', name: '氢', atomicNumber: 1, row: 0, col: 0, chemistId: 'lavoisier', category: '非金属', color: '#E8C9A0' },
+  { id: 'he', symbol: 'He', name: '氦', atomicNumber: 2, row: 0, col: 3, chemistId: 'lavoisier', category: '稀有气体', color: '#A0D8E8' },
+  { id: 'li', symbol: 'Li', name: '锂', atomicNumber: 3, row: 1, col: 0, chemistId: 'mendeleev', category: '碱金属', color: '#E8A0A0' },
+  { id: 'be', symbol: 'Be', name: '铍', atomicNumber: 4, row: 1, col: 1, chemistId: 'boyle', category: '碱土金属', color: '#C9E8A0' },
+  { id: 'b', symbol: 'B', name: '硼', atomicNumber: 5, row: 1, col: 2, chemistId: 'lavoisier', category: '类金属', color: '#E8E8A0' },
+  { id: 'c', symbol: 'C', name: '碳', atomicNumber: 6, row: 1, col: 3, chemistId: 'boyle', category: '非金属', color: '#A0A0A0' },
+  { id: 'n', symbol: 'N', name: '氮', atomicNumber: 7, row: 2, col: 0, chemistId: 'lavoisier', category: '非金属', color: '#A0C4E8' },
+  { id: 'o', symbol: 'O', name: '氧', atomicNumber: 8, row: 2, col: 1, chemistId: 'lavoisier', category: '非金属', color: '#E8A0C4' },
+  { id: 'f', symbol: 'F', name: '氟', atomicNumber: 9, row: 2, col: 2, chemistId: 'mendeleev', category: '卤素', color: '#C4A0E8' },
+  { id: 'ne', symbol: 'Ne', name: '氖', atomicNumber: 10, row: 2, col: 3, chemistId: 'mendeleev', category: '稀有气体', color: '#A0E8C4' },
+  { id: 'na', symbol: 'Na', name: '钠', atomicNumber: 11, row: 3, col: 0, chemistId: 'mendeleev', category: '碱金属', color: '#FFB347' },
+  { id: 'mg', symbol: 'Mg', name: '镁', atomicNumber: 12, row: 3, col: 1, chemistId: 'boyle', category: '碱土金属', color: '#77DD77' },
+  { id: 'al', symbol: 'Al', name: '铝', atomicNumber: 13, row: 3, col: 2, chemistId: 'lavoisier', category: '金属', color: '#CFCFC4' },
+  { id: 'si', symbol: 'Si', name: '硅', atomicNumber: 14, row: 3, col: 3, chemistId: 'mendeleev', category: '类金属', color: '#FDFD96' },
+  { id: 'p', symbol: 'P', name: '磷', atomicNumber: 15, row: 0, col: 1, chemistId: 'boyle', category: '非金属', color: '#FF9999' },
+  { id: 's', symbol: 'S', name: '硫', atomicNumber: 16, row: 0, col: 2, chemistId: 'lavoisier', category: '非金属', color: '#FFFF99' },
+];
+
+export const elementFacts: ElementFact[] = [
+  { id: 'ef-1', elementId: 'h', title: '最轻的元素', content: '氢是宇宙中最轻、最丰富的元素，占宇宙可见物质的75%。拉瓦锡将其命名为"水的形成者"。', year: 1766, chemistId: 'lavoisier' },
+  { id: 'ef-2', elementId: 'o', title: '氧气的发现', content: '拉瓦锡通过加热氧化汞发现了氧气，并推翻了统治化学界百年的"燃素说"。', year: 1774, chemistId: 'lavoisier' },
+  { id: 'ef-3', elementId: 'h', title: '氢气球的时代', content: '1783年，人类第一次乘坐氢气球飞上天空。然而氢气的易燃易爆性也带来了许多灾难。', year: 1783, chemistId: 'lavoisier' },
+  { id: 'ef-4', elementId: 'n', title: '空气的主要成分', content: '拉瓦锡发现空气不是单一物质，而是由约4/5的氮气和1/5的氧气组成的混合物。', year: 1777, chemistId: 'lavoisier' },
+  { id: 'ef-5', elementId: 'c', title: '生命的骨架', content: '碳是所有有机化合物的基础，它能形成长链和复杂结构，这是生命诞生的关键。', year: 1661, chemistId: 'boyle' },
+  { id: 'ef-6', elementId: 'p', title: '意外发现的磷', content: '德国炼金术士布兰德在蒸发尿液时意外发现了磷。他最初以为找到了"点金石"。', year: 1669, chemistId: 'boyle' },
+  { id: 'ef-7', elementId: 's', title: '古老的元素', content: '硫是人类最早知道的元素之一，在《圣经》中就有记载。波义耳研究了硫的燃烧反应。', year: 1660, chemistId: 'boyle' },
+  { id: 'ef-8', elementId: 'be', title: '绿宝石的成分', content: '铍存在于绿宝石中，它的名字来源于希腊语"beryllos"，意为"绿宝石"。', year: 1798, chemistId: 'boyle' },
+  { id: 'ef-9', elementId: 'mg', title: '耀眼的白光', content: '镁燃烧时会发出强烈的白光，早期被用于摄影闪光灯和烟火。', year: 1755, chemistId: 'boyle' },
+  { id: 'ef-10', elementId: 'li', title: '最轻的金属', content: '锂是最轻的金属，可以漂浮在水面上。它的名字来源于希腊语"lithos"，意为"石头"。', year: 1817, chemistId: 'mendeleev' },
+  { id: 'ef-11', elementId: 'na', title: '食盐的核心', content: '钠最常见的化合物是氯化钠（食盐）。纯净的钠是一种柔软的银白色金属，遇水剧烈反应。', year: 1807, chemistId: 'mendeleev' },
+  { id: 'ef-12', elementId: 'f', title: '最活泼的非金属', content: '氟是最活泼的非金属元素，几乎能与所有物质发生反应。它的发现历程充满了危险。', year: 1886, chemistId: 'mendeleev' },
+  { id: 'ef-13', elementId: 'si', title: '半导体之王', content: '硅是地壳中第二丰富的元素，是现代电子工业的基础，支撑着整个信息时代。', year: 1824, chemistId: 'mendeleev' },
+  { id: 'ef-14', elementId: 'ne', title: '霓虹灯的秘密', content: '氖气在放电时会发出明亮的橙红色光，被广泛用于霓虹灯。"霓虹"就是"neon"的音译。', year: 1898, chemistId: 'mendeleev' },
+  { id: 'ef-15', elementId: 'he', title: '太阳元素', content: '氦气最初是在太阳光谱中发现的，名字来源于希腊语"helios"，意为"太阳"。', year: 1868, chemistId: 'mendeleev' },
+  { id: 'ef-16', elementId: 'al', title: '曾经比黄金还贵', content: '在19世纪，铝是一种非常稀有的贵金属，法国皇帝拿破仑三世曾用铝制餐具招待贵宾。', year: 1825, chemistId: 'lavoisier' },
+];
+
+export const ROWS = 4;
+export const COLS = 4;
+
+export function getElementById(id: string): Element | undefined {
+  return elements.find(e => e.id === id);
+}
+
+export function getElementsByChemist(chemistId: string): Element[] {
+  return elements.filter(e => e.chemistId === chemistId);
+}
+
+export function getRandomElementByChemist(chemistId: string): Element | null {
+  const chemistElements = getElementsByChemist(chemistId);
+  if (chemistElements.length === 0) return null;
+  const randomIndex = Math.floor(Math.random() * chemistElements.length);
+  return chemistElements[randomIndex];
+}
+
+export function getElementFact(elementId: string): ElementFact | undefined {
+  return elementFacts.find(f => f.elementId === elementId);
+}
+
+export function getRandomElementFact(chemistId?: string): ElementFact | null {
+  let availableFacts = chemistId
+    ? elementFacts.filter(f => f.chemistId === chemistId)
+    : elementFacts;
+  
+  if (availableFacts.length === 0) return null;
+  const randomIndex = Math.floor(Math.random() * availableFacts.length);
+  return availableFacts[randomIndex];
+}
+
+export function checkLineCompletion(
+  board: Record<string, CellOwner>,
+  elements: Element[]
+): { type: 'row' | 'col'; index: number; owner: CellOwner } | null {
+  for (let row = 0; row < ROWS; row++) {
+    const rowElements = elements.filter(e => e.row === row);
+    const owner = checkRowColCompletion(rowElements.map(e => board[`${e.row}-${e.col}`]));
+    if (owner) {
+      return { type: 'row', index: row, owner };
+    }
+  }
+  
+  for (let col = 0; col < COLS; col++) {
+    const colElements = elements.filter(e => e.col === col);
+    const owner = checkRowColCompletion(colElements.map(e => board[`${e.row}-${e.col}`]));
+    if (owner) {
+      return { type: 'col', index: col, owner };
+    }
+  }
+  
+  return null;
+}
+
+function checkRowColCompletion(owners: CellOwner[]): CellOwner {
+  if (owners.length === 0) return null;
+  const firstOwner = owners[0];
+  if (!firstOwner) return null;
+  for (const owner of owners) {
+    if (owner !== firstOwner) return null;
+  }
+  return firstOwner;
+}
+
+export function getUnoccupiedCells(board: Record<string, CellOwner>): string[] {
+  const unoccupied: string[] = [];
+  for (const element of elements) {
+    const key = `${element.row}-${element.col}`;
+    if (!board[key]) {
+      unoccupied.push(element.id);
+    }
+  }
+  return unoccupied;
+}
+
+export function getPlayerCells(board: Record<string, CellOwner>): string[] {
+  const playerCells: string[] = [];
+  for (const element of elements) {
+    const key = `${element.row}-${element.col}`;
+    if (board[key] === 'player') {
+      playerCells.push(element.id);
+    }
+  }
+  return playerCells;
+}
+
+export function getAICells(board: Record<string, CellOwner>): string[] {
+  const aiCells: string[] = [];
+  for (const element of elements) {
+    const key = `${element.row}-${element.col}`;
+    if (board[key] === 'ai') {
+      aiCells.push(element.id);
+    }
+  }
+  return aiCells;
 }

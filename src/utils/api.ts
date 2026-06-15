@@ -1,4 +1,4 @@
-import type { Chemist, Question, FunFact, SubmitAnswerRequest, SubmitAnswerResponse } from '../../shared/types';
+import type { Chemist, Question, FunFact, SubmitAnswerRequest, SubmitAnswerResponse, Element, ElementFact, SubmitPeriodicAnswerRequest, SubmitPeriodicAnswerResponse } from '../../shared/types';
 
 const API_BASE = '/api';
 
@@ -44,4 +44,25 @@ export const api = {
 
   getFactsByChemist: (chemistId: string): Promise<FunFact[]> => 
     fetchJson<FunFact[]>(`/fun-facts/chemist/${chemistId}`),
+
+  getElements: (): Promise<Element[]> =>
+    fetchJson<Element[]>('/elements'),
+
+  getElementById: (id: string): Promise<Element> =>
+    fetchJson<Element>(`/elements/${id}`),
+
+  getElementsByChemist: (chemistId: string): Promise<Element[]> =>
+    fetchJson<Element[]>(`/elements/chemist/${chemistId}`),
+
+  getElementFact: (elementId: string): Promise<ElementFact> =>
+    fetchJson<ElementFact>(`/element-facts/element/${elementId}`),
+
+  getRandomElementFact: (chemistId?: string): Promise<ElementFact> =>
+    fetchJson<ElementFact>(`/element-facts/random${chemistId ? `?chemistId=${chemistId}` : ''}`),
+
+  submitPeriodicAnswer: (data: SubmitPeriodicAnswerRequest): Promise<SubmitPeriodicAnswerResponse> =>
+    fetchJson<SubmitPeriodicAnswerResponse>('/periodic-game/submit-answer', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };

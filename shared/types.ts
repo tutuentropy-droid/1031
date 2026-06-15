@@ -42,3 +42,63 @@ export interface SubmitAnswerResponse {
 }
 
 export type GameStatus = 'idle' | 'playing' | 'answered' | 'unlock' | 'gameover' | 'chainReaction';
+
+export interface Element {
+  id: string;
+  symbol: string;
+  name: string;
+  atomicNumber: number;
+  row: number;
+  col: number;
+  chemistId: string;
+  category: string;
+  color: string;
+}
+
+export interface ElementFact {
+  id: string;
+  elementId: string;
+  title: string;
+  content: string;
+  year?: number;
+  chemistId: string;
+}
+
+export type CellOwner = 'player' | 'ai' | null;
+
+export interface PeriodicTableGameState {
+  board: Map<string, CellOwner>;
+  playerCells: string[];
+  aiCells: string[];
+  prophecyCount: number;
+  currentProphecy: string | null;
+  selectedElementId: string | null;
+  aiAvatar: string;
+  aiName: string;
+  isProphecyMode: boolean;
+  aiThinking: boolean;
+  lastCapturedElement: Element | null;
+  lastLostElement: Element | null;
+  completedLines: { type: 'row' | 'col'; index: number; owner: CellOwner }[];
+}
+
+export type ProphecyType = 'boyle' | 'lavoisier' | 'mendeleev' | 'random';
+
+export interface SubmitPeriodicAnswerRequest {
+  questionId: string;
+  selectedIndex: number;
+  elementId: string;
+}
+
+export interface SubmitPeriodicAnswerResponse {
+  isCorrect: boolean;
+  correctIndex: number;
+  explanation: string;
+  capturedElement: Element | null;
+  lostElement: Element | null;
+  newBoardState: Record<string, CellOwner>;
+  lineCompleted: { type: 'row' | 'col'; index: number; owner: CellOwner } | null;
+  gameOver: boolean;
+  winner: CellOwner;
+  nextQuestion?: Question;
+}
